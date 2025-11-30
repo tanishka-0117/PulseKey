@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row fade-in">
+    <!-- Sidebar -->
+    <div class="col-lg-3">
+        <div class="sidebar sidebar-sticky">
+            <!-- User Profile -->
+            <div class="user-profile">
+                <div class="user-avatar">
+                    <i class="fas fa-user-md"></i>
+                </div>
+                <h6>Welcome!</h6>
+                <p class="text-muted small">User ID: {{ session.user_id[:8] }}...</p>
+                <div class="mt-3">
+                    <span class="badge bg-success"><i class="fas fa-shield-alt me-1"></i> Secure</span>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="mb-4">
+                <h6 class="text-uppercase fw-bold text-muted mb-3">Quick Actions</h6>
+                <a href="{{ url_for('upload_report') }}" class="quick-action">
+                    <i class="fas fa-upload me-2"></i>Upload Report
+                </a>
+                <a href="{{ url_for('reports') }}" class="quick-action">
+                    <i class="fas fa-file-medical me-2"></i>My Reports
+                </a>
+                <a href="{{ url_for('batch_qr') }}" class="quick-action">
+                    <i class="fas fa-qrcode me-2"></i>Batch QR Codes
+                </a>
+                <a href="{{ url_for('settings') }}" class="quick-action">
+                    <i class="fas fa-cog me-2"></i>Settings
+                </a>
+            </div>
+
+            <!-- Statistics -->
+            <div class="mb-4">
+                <h6 class="text-uppercase fw-bold text-muted mb-3">Statistics</h6>
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Total Reports:</span>
+                    <strong>{{ total_reports }}</strong>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Shared Reports:</span>
+                    <strong>{{ shared_count }}</strong>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <span>This Month:</span>
+                    <strong>{{ recent_reports }}</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="col-lg-9">
+        <!-- Stats Cards -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card stats-card">
+                    <i class="fas fa-file-medical feature-icon"></i>
+                    <span class="stats-number">{{ total_reports }}</span>
+                    <span class="stats-label">Total Reports</span>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card stats-card">
+                    <i class="fas fa-share-alt feature-icon"></i>
+                    <span class="stats-number">{{ shared_count }}</span>
+                    <span class="stats-label">Shared</span>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card stats-card">
+                    <i class="fas fa-qrcode feature-icon"></i>
+                    <span class="stats-number">{{ total_reports }}</span>
+                    <span class="stats-label">QR Codes</span>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card stats-card">
+                    <i class="fas fa-chart-line feature-icon"></i>
+                    <span class="stats-number">{{ ((total_reports / 30) * 100)|round|int if total_reports > 0 else 0 }}%</span>
+                    <span class="stats-label">Usage</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Reports -->
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-history me-2"></i>Recent Reports</h5>
+                <a href="{{ url_for('reports') }}" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="card-body">
+                {% if user_reports %}
+                    <div class="list-group list-group-flush">
+                        {% for report in user_reports %}
+                        <div class="list-group-item report-item">
+                            <div class="d-flex w-100 justify-content-between align-items-start">
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-1">{{ report.original_filename }}</h6>
+                                    <p class="mb-1 text-muted small">{{ report.summary[:100] if report.summary else 'No summary available' }}...</p>
+                                    <small class="text-muted report-date">{{ report.created_at }}</small>
+                                </div>
+                                <div class="btn-group btn-group-sm ms-3">
+                                    <a href="{{ url_for('view_report', report_id=report.report_id) }}" 
+                                       class="btn btn-outline-primary" data-bs-toggle="tooltip" title="View Report">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="{{ url_for('generate_qr', report_id=report.report_id) }}" 
+                                       class="btn btn-outline-success" data-bs-toggle="tooltip" title="QR Code">
+                                        <i class="fas fa-qrcode"></i>
+                                    </a>
+                                    <button onclick="shareReport('{{ report.report_id }}')" 
+                                            class="btn btn-outline-info" data-bs-toggle="tooltip" title="Share">
+                                        <i class="fas fa-share-alt"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-file-medical fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">No Reports Yet</h5>
+                        <p class="text-muted">Upload your first medical report to get started</p>
+                        <a href="{{ url_for('upload_report') }}" class="btn btn-primary">
+                            <i class="fas fa-upload me-2"></i>Upload First Report
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Features Grid -->
+        <div class="row mt-4">
+            <div class="col-md-4">
+                <div class="card feature-card">
+                    <i class="fas fa-camera feature-icon"></i>
+                    <h5>OCR Technology</h5>
+                    <p class="text-muted">Automatically extract text from medical reports using advanced OCR</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card feature-card">
+                    <i class="fas fa-qrcode feature-icon"></i>
+                    <h5>QR Codes</h5>
+                    <p class="text-muted">Generate secure QR codes for easy access to medical records</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card feature-card">
+                    <i class="fas fa-shield-alt feature-icon"></i>
+                    <h5>Secure Sharing</h5>
+                    <p class="text-muted">Control who can view your medical reports with permission-based access</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
