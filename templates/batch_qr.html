@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row fade-in">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0"><i class="fas fa-qrcode me-2"></i>Batch QR Code Generation</h4>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Generate QR codes for multiple reports at once. Each QR code provides direct access to the corresponding medical report.
+                </div>
+                
+                {% if reports %}
+                <div class="row">
+                    {% for report in reports %}
+                    <div class="col-md-6 col-lg-4 mb-4">
+                        <div class="card h-100">
+                            <div class="card-body text-center">
+                                {% if report.qr_code_path %}
+                                <img src="{{ url_for('static', filename=report.qr_code_path) }}" 
+                                     alt="QR Code for {{ report.original_filename }}" 
+                                     class="img-fluid mb-3" 
+                                     style="max-width: 150px; height: auto;"
+                                     onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTUwIiBoZWlnaHQ9IjE1MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZGVlMmU2Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPlFSIENvZGUgTm90IEZvdW5kPC90ZXh0Pjwvc3ZnPg=='">
+                                {% else %}
+                                <div class="text-muted mb-3" style="height: 150px; display: flex; align-items: center; justify-content: center; background: #f8f9fa; border-radius: 8px;">
+                                    <i class="fas fa-qrcode fa-3x"></i>
+                                </div>
+                                {% endif %}
+                                <h6 class="card-title">{{ report.original_filename }}</h6>
+                                <p class="card-text text-muted small">
+                                    <!-- Safe date display without strftime -->
+                                    {% if report.created_at %}
+                                        {{ report.created_at }}
+                                    {% else %}
+                                        Unknown date
+                                    {% endif %}
+                                </p>
+                                {% if report.qr_code_path %}
+                                <span class="badge bg-success">QR Generated</span>
+                                {% else %}
+                                <span class="badge bg-warning">No QR</span>
+                                {% endif %}
+                            </div>
+                            <div class="card-footer bg-transparent">
+                                <div class="btn-group w-100">
+                                    <a href="{{ url_for('view_report', report_id=report.report_id) }}" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="{{ url_for('generate_qr', report_id=report.report_id) }}" class="btn btn-sm btn-outline-success">
+                                        <i class="fas fa-qrcode"></i>
+                                    </a>
+                                    <a href="{{ url_for('share_report', report_id=report.report_id) }}" class="btn btn-sm btn-outline-info">
+                                        <i class="fas fa-share-alt"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-qrcode fa-4x text-muted mb-3"></i>
+                    <h4 class="text-muted">No Reports Available</h4>
+                    <p class="text-muted mb-4">Upload some medical reports to generate QR codes</p>
+                    <a href="{{ url_for('upload_report') }}" class="btn btn-primary">
+                        <i class="fas fa-upload me-2"></i>Upload Reports
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

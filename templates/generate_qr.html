@@ -1,0 +1,257 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center fade-in">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header text-center">
+                <h4 class="mb-0"><i class="fas fa-qrcode me-2"></i>QR Code for Medical Report</h4>
+            </div>
+            <div class="card-body">
+                {% if qr_exists and report.qr_code_path %}
+                    <div class="row">
+                        <div class="col-md-6 text-center">
+                            <div class="qr-code-container mb-4">
+                                <img src="{{ url_for('static', filename=report.qr_code_path) }}" 
+                                     alt="Medical Report QR Code" 
+                                     class="qr-code img-fluid"
+                                     style="max-width: 300px; height: auto; border: 2px solid #dee2e6; border-radius: 8px; padding: 10px;"
+                                     onerror="this.style.display='none'; document.getElementById('qrError').style.display='block';">
+                                
+                                <div id="qrError" class="alert alert-warning mt-3" style="display: none;">
+                                    <i class="fas fa-exclamation-triangle me-2"></i>
+                                    QR code image failed to load. Please try regenerating the QR code.
+                                </div>
+                                
+                                <p class="text-muted mt-3">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    Scan this QR code to access the medical report
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="report-info">
+                                <h5 class="mb-3">Report Information</h5>
+                                <ul class="list-unstyled">
+                                    <li class="mb-2">
+                                        <strong><i class="fas fa-file me-2 text-primary"></i>Filename:</strong>
+                                        {{ report.original_filename }}
+                                    </li>
+                                    <li class="mb-2">
+                                        <strong><i class="fas fa-calendar me-2 text-primary"></i>Created:</strong>
+                                        {{ report.created_at }}
+                                    </li>
+                                    <li class="mb-2">
+                                        <strong><i class="fas fa-id-badge me-2 text-primary"></i>Report ID:</strong>
+                                        <code>{{ report.report_id }}</code>
+                                    </li>
+                                    <li class="mb-2">
+                                        <strong><i class="fas fa-link me-2 text-primary"></i>QR Status:</strong>
+                                        <span class="badge bg-success">Available</span>
+                                    </li>
+                                </ul>
+                                
+                                <!-- Report URL for manual sharing -->
+                                <div class="mt-4">
+                                    <label class="form-label"><strong>Shareable Link:</strong></label>
+                                    <div class="input-group">
+                                        <input type="text" class="form-control" 
+                                               value="{{ url_for('view_report', report_id=report.report_id, _external=True) }}" 
+                                               readonly id="reportUrl">
+                                        <button class="btn btn-outline-primary" type="button" onclick="copyToClipboard()">
+                                            <i class="fas fa-copy"></i>
+                                        </button>
+                                    </div>
+                                    <small class="text-muted">Copy this link to share the report manually</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="d-flex justify-content-center gap-2 flex-wrap">
+                                <a href="{{ url_for('view_report', report_id=report.report_id) }}" class="btn btn-primary">
+                                    <i class="fas fa-eye me-2"></i>View Report
+                                </a>
+                                <a href="{{ url_for('share_report', report_id=report.report_id) }}" class="btn btn-info">
+                                    <i class="fas fa-share-alt me-2"></i>Share Access
+                                </a>
+                                <form method="POST" action="{{ url_for('generate_qr', report_id=report.report_id) }}" class="d-inline">
+                                    <button type="submit" class="btn btn-warning">
+                                        <i class="fas fa-sync-alt me-2"></i>Regenerate QR
+                                    </button>
+                                </form>
+                                <a href="{{ url_for('index') }}" class="btn btn-secondary">
+                                    <i class="fas fa-home me-2"></i>Dashboard
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <div class="mb-4">
+                            <i class="fas fa-qrcode fa-4x text-muted mb-3"></i>
+                            <h4 class="text-muted">QR Code Not Available</h4>
+                            <p class="text-muted">Generate a QR code for easy access to this medical report.</p>
+                        </div>
+                        
+                        <div class="row justify-content-center">
+                            <div class="col-md-6">
+                                <form method="POST" action="{{ url_for('generate_qr', report_id=report.report_id) }}">
+                                    <button type="submit" class="btn btn-primary btn-lg w-100 mb-3">
+                                        <i class="fas fa-bolt me-2"></i>Generate QR Code
+                                    </button>
+                                </form>
+                                <div class="d-flex gap-2 justify-content-center">
+                                    <a href="{{ url_for('view_report', report_id=report.report_id) }}" class="btn btn-outline-primary">
+                                        <i class="fas fa-arrow-left me-2"></i>Back to Report
+                                    </a>
+                                    <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">
+                                        <i class="fas fa-home me-2"></i>Dashboard
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- QR Code Usage Instructions -->
+        {% if qr_exists and report.qr_code_path %}
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>How to Use QR Codes</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6><i class="fas fa-mobile-alt me-2 text-primary"></i>For Mobile Devices</h6>
+                        <ul class="list-unstyled">
+                            <li class="mb-2">
+                                <i class="fas fa-camera text-success me-2"></i>
+                                Open your camera app
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-qrcode text-success me-2"></i>
+                                Point camera at the QR code
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-link text-success me-2"></i>
+                                Tap the notification to open the report
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6><i class="fas fa-desktop me-2 text-primary"></i>For Computers</h6>
+                        <ul class="list-unstyled">
+                            <li class="mb-2">
+                                <i class="fas fa-camera text-success me-2"></i>
+                                Use a webcam with QR scanner
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-mouse-pointer text-success me-2"></i>
+                                Or use the shareable link above
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-print text-success me-2"></i>
+                                Print the QR code for physical access
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+function copyToClipboard() {
+    const urlInput = document.getElementById('reportUrl');
+    urlInput.select();
+    urlInput.setSelectionRange(0, 99999);
+    
+    try {
+        document.execCommand('copy');
+        showAlert('URL copied to clipboard!', 'success');
+    } catch (err) {
+        // Fallback for modern browsers
+        navigator.clipboard.writeText(urlInput.value).then(() => {
+            showAlert('URL copied to clipboard!', 'success');
+        }).catch(() => {
+            showAlert('Failed to copy URL', 'danger');
+        });
+    }
+}
+
+function showAlert(message, type) {
+    // Remove existing alerts
+    const existingAlerts = document.querySelectorAll('.alert.alert-dismissible');
+    existingAlerts.forEach(alert => alert.remove());
+    
+    const alert = document.createElement('div');
+    alert.className = `alert alert-${type} alert-dismissible fade show mt-3`;
+    alert.innerHTML = `
+        <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-triangle'} me-2"></i>
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    document.querySelector('.card-body').appendChild(alert);
+    
+    // Auto remove after 3 seconds
+    setTimeout(() => {
+        if (alert.parentNode) {
+            alert.parentNode.removeChild(alert);
+        }
+    }, 3000);
+}
+
+// Test QR code image loading
+document.addEventListener('DOMContentLoaded', function() {
+    const qrImage = document.querySelector('.qr-code');
+    if (qrImage) {
+        qrImage.onload = function() {
+            console.log('QR code image loaded successfully');
+        };
+        qrImage.onerror = function() {
+            console.log('QR code image failed to load');
+            document.getElementById('qrError').style.display = 'block';
+        };
+    }
+});
+</script>
+
+<style>
+.qr-code {
+    max-width: 100%;
+    height: auto;
+    border: 2px solid #dee2e6;
+    border-radius: 8px;
+    padding: 10px;
+    background: white;
+}
+
+.upload-area {
+    border: 2px dashed #dee2e6;
+    border-radius: 8px;
+    padding: 2rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.upload-area:hover, .upload-area.dragover {
+    border-color: #007bff;
+    background-color: #f8f9fa;
+}
+
+.upload-icon {
+    font-size: 3rem;
+    color: #6c757d;
+    margin-bottom: 1rem;
+}
+</style>
+{% endblock %}

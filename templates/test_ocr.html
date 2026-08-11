@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h4>Test OCR Functionality</h4>
+            </div>
+            <div class="card-body">
+                <form id="testOcrForm" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label for="test_image" class="form-label">Upload Test Image</label>
+                        <input class="form-control" type="file" id="test_image" name="test_image" accept=".png,.jpg,.jpeg" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Test OCR</button>
+                </form>
+                
+                <div id="testResults" class="mt-4" style="display: none;">
+                    <h5>OCR Results:</h5>
+                    <div id="resultsContent"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('testOcrForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData();
+    formData.append('test_image', document.getElementById('test_image').files[0]);
+    
+    fetch('/test_ocr_processing', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        const resultsDiv = document.getElementById('testResults');
+        const contentDiv = document.getElementById('resultsContent');
+        
+        if (data.success) {
+            contentDiv.innerHTML = `
+                <div class="alert alert-success">
+                    <strong>OCR Successful!</strong>
+                </div>
+                <h6>Extracted Text:</h6>
+                <div style="max-height: 200px; overflow-y: auto; background: #f8f9fa; padding: 10px; border-radius: 5px;">
+                    <pre>${data.extracted_text || 'No text extracted'}</pre>
+                </div>
+                <h6 class="mt-3">Summary:</h6>
+                <pre>${JSON.stringify(data.summary, null, 2)}</pre>
+            `;
+        } else {
+            contentDiv.innerHTML = `
+                <div class="alert alert-danger">
+                    <strong>OCR Failed:</strong> ${data.error || 'Unknown error'}
+                </div>
+            `;
+        }
+        
+        resultsDiv.style.display = 'block';
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        document.getElementById('resultsContent').innerHTML = `
+            <div class="alert alert-danger">
+                <strong>Request Failed:</strong> ${error}
+            </div>
+        `;
+        document.getElementById('testResults').style.display = 'block';
+    });
+});
+</script>
+{% endblock %}
